@@ -59,7 +59,17 @@ const userController = {
           res.status(404).json({ message: "No user found with this id" });
           return;
         }
-        res.json(dbUserData);
+        // should we update all associations send alert like with delete? for better UX
+        return Thought.updateMany({ username: dbUserData.username }, body, {
+          new: true,
+          runValidators: true,
+        });
+      })
+      .then(() => {
+        res.json({
+          // cannot return object in json (tried to add username to message)
+          message: "User and all associated thoughts have been updated",
+        });
       })
       .catch((err) => {
         console.log(err);
@@ -69,20 +79,24 @@ const userController = {
 
   // remove user by its _id
   deleteUser({ params }, res) {
-    User.findByIdAndDelete({ _id: params.id })
-      .then((dbUserData) => {
-        // BONUS Remove user's associated thoughts when deleted ------------------------------------------------------------------------
-        return Thought.remove({ _id: dbUserData.thoughts });
-      })
+    User.findOneAndDelete({ _id: params.id })
       .then((dbUserData) => {
         if (!dbUserData) {
           res.status(404).json({ message: "No user found with this id!" });
           return;
         }
-        res.json(dbUserData);
+        // BONUS Remove user's associated thoughts when deleted ------------------------------------------------------------------------
+        // use deleteMany to delete all of the documents that match condition from the collection.
+        // Behaves like remove(), but deletes all documents that match conditions regardless of the single option.
+        return Thought.deleteMany({ username: dbUserData.username });
+      })
+      .then(() => {
+        // send alert that user's associated thoughts have been removed
+        res.json({
+          message: "User and all associated thoughts have been removed!",
+        });
       })
       .catch((err) => {
-        console.log(dbUserData);
         res.status(400).json(err);
       });
   },
@@ -91,7 +105,8 @@ const userController = {
   addFriend({ params }, res) {
     User.findOneAndUpdate(
       { _id: params.userId },
-      { $push: { friends: { _id: params.friendId } } },
+      // push to key(array name) value(element to push)
+      { $push: { friends: params.friendId } },
       { new: true, runValidators: true }
     )
       .then((dbUserData) => {

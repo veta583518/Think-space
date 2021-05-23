@@ -19,7 +19,7 @@ const thoughtController = {
   getThoughtById({ params }, res) {
     Thought.findOneAndUpdate({ _id: params.id })
       .populate({
-        path: "thoughts",
+        path: "reactions",
         select: "-__v",
       })
       .select("-__v")
@@ -38,13 +38,14 @@ const thoughtController = {
   createThought({ body }, res) {
     Thought.create(body)
       // get thought's id
-      .then({ _id });
-    // push the created thought's _id to the associated user's thoughts array field
-    return User.findOneAndUpdate(
-      { _id: params.userId },
-      { $push: { thoughts: _id } },
-      { new: true }
-    )
+      .then(({ _id }) => {
+        // push the created thought's _id to the associated user's thoughts array field
+        return User.findOneAndUpdate(
+          { _id: body.userId },
+          { $push: { thoughts: _id } },
+          { new: true }
+        );
+      })
       .then((dbUserData) => {
         if (!dbUserData) {
           res.status(404).json({ message: "No user found with that id" });
@@ -59,7 +60,7 @@ const thoughtController = {
   },
   // update a thought by its _id
   updateThought({ params, body }, res) {
-    Thought.findOneAndUpdate({ _id: params.thoughtId }, body, {
+    Thought.findOneAndUpdate({ _id: params.id }, body, {
       new: true,
       runValidators: true,
     })
@@ -71,20 +72,18 @@ const thoughtController = {
         res.json(dbThoughtData);
       })
       .catch((err) => {
-        console.log(err);
         res.status(400).json(err);
       });
   },
   // delete a thought by its _id
   deleteThought({ params }, res) {
-    Thought.findOneAndDelete({ _id: params.thoughtId })
-      .then((deletedThought) => {
-        if (!deletedThought) {
-          return res.status(404).json({ message: "No Thought with this id!" });
-        }
+    Thought.findOneAndDelete({ _id: params.id })
+      .then((dbThoughtData) => {
+        // update user to remove thought
         return User.findOneAndUpdate(
-          { _id: params.userId },
-          { $pull: { thoughts: params.thoughtId } },
+          // use username as this is the parameter
+          { username: dbThoughtData.username },
+          { $pull: { thoughts: params.id } },
           { new: true }
         );
       })
