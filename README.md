@@ -18,7 +18,7 @@ Think-space is an API built with MongoDB and Mongoose ODM. This is to fucntion f
 
 ## Demo
 
-[Demo](https://github.com/veta583518/Think-space/blob/main/utils/assets/Untitled_%20May%2022%2C%202021%2010_39%20PM.webm)
+[Demo](https://www.youtube.com/watch?v=dFZ3KEWJ1ME)
 ![screenshot](https://github.com/veta583518/Think-space/blob/main/utils/assets/screenshot.PNG)
 ![screenshot2](https://github.com/veta583518/Think-space/blob/main/utils/assets/screenshot2.PNG)
 
